@@ -1,330 +1,3 @@
-
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام التوزيع الاحترافي للمهام التعليمية</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap');
-        
-        :root {
-            --navy: #0a192f;
-            --royal-blue: #1e40af;
-            --soft-blue: #eff6ff;
-            --accent: #3b82f6;
-        }
-
-        body {
-            font-family: 'Tajawal', sans-serif;
-            background-color: #f8fafc;
-            color: var(--navy);
-        }
-
-        .gradient-header {
-            background: linear-gradient(135deg, #0a192f 0%, #1e3a8a 100%);
-        }
-
-        .card {
-            background: white;
-            border: 1px solid #e2e8f0;
-            transition: all 0.3s ease;
-        }
-
-        .card:hover {
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        }
-
-        .btn-primary {
-            background-color: var(--royal-blue);
-            transition: all 0.2s;
-        }
-
-        .btn-primary:hover {
-            background-color: var(--navy);
-            transform: translateY(-1px);
-        }
-
-        .period-box {
-            cursor: pointer;
-            border: 2px solid #e2e8f0;
-            transition: all 0.2s;
-        }
-
-        .period-box.selected {
-            border-color: var(--accent);
-            background-color: var(--soft-blue);
-        }
-
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 10px;
-        }
-
-        .head-medal {
-            color: #fbbf24;
-            filter: drop-shadow(0 0 2px rgba(251, 191, 36, 0.4));
-        }
-    </style>
-</head>
-<body class="bg-slate-50">
-
-    <!-- Header -->
-    <header class="gradient-header text-white py-8 mb-8 shadow-lg">
-        <div class="container mx-auto px-4 text-center">
-            <h1 class="text-3xl md:text-4xl font-extrabold mb-2">نظام التوزيع الذكي للمهام التعليمية</h1>
-            <p class="text-blue-100 opacity-90 text-lg">إدارة الحصص، الإشراف، والعدالة الزمنية باحترافية</p>
-        </div>
-    </header>
-
-    <main class="container mx-auto px-4 pb-20">
-        
-        <!-- Top Stats Row -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="card p-6 rounded-2xl flex items-center space-x-reverse space-x-4 border-r-4 border-blue-600">
-                <div class="bg-blue-100 p-3 rounded-xl"><i class="fas fa-users text-blue-600 text-xl"></i></div>
-                <div>
-                    <p class="text-sm text-gray-500 font-bold">إجمالي المعلمين</p>
-                    <h3 class="text-2xl font-black" id="stat-total-teachers">0</h3>
-                </div>
-            </div>
-            <div class="card p-6 rounded-2xl flex items-center space-x-reverse space-x-4 border-r-4 border-indigo-600">
-                <div class="bg-indigo-100 p-3 rounded-xl"><i class="fas fa-clock text-indigo-600 text-xl"></i></div>
-                <div>
-                    <p class="text-sm text-gray-500 font-bold">متوسط العبء</p>
-                    <h3 class="text-2xl font-black" id="stat-avg-time">0 س</h3>
-                </div>
-            </div>
-            <div class="card p-6 rounded-2xl flex items-center space-x-reverse space-x-4 border-r-4 border-emerald-600">
-                <div class="bg-emerald-100 p-3 rounded-xl"><i class="fas fa-balance-scale text-emerald-600 text-xl"></i></div>
-                <div>
-                    <p class="text-sm text-gray-500 font-bold">مؤشر العدالة</p>
-                    <h3 class="text-2xl font-black" id="stat-fairness">100%</h3>
-                </div>
-            </div>
-            <div class="card p-6 rounded-2xl flex items-center space-x-reverse space-x-4 border-r-4 border-amber-600">
-                <div class="bg-amber-100 p-3 rounded-xl"><i class="fas fa-layer-group text-amber-600 text-xl"></i></div>
-                <div>
-                    <p class="text-sm text-gray-500 font-bold">إجمالي الحصص</p>
-                    <h3 class="text-2xl font-black" id="stat-total-periods">0</h3>
-                </div>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            
-            <!-- Sidebar: Add Teacher -->
-            <div class="lg:col-span-4 space-y-6">
-                <section class="card p-6 rounded-2xl shadow-sm border-t-4 border-blue-900">
-                    <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
-                        <i class="fas fa-user-plus text-blue-900"></i> إضافة معلم جديد
-                    </h2>
-                    
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-bold mb-2 text-gray-700">اسم المعلم</label>
-                            <input type="text" id="teacher-name" class="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="مثال: أ. محمد العلي">
-                        </div>
-
-                        <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                            <input type="checkbox" id="is-head" class="w-5 h-5 accent-blue-900">
-                            <label for="is-head" class="text-sm font-bold cursor-pointer">رئيس قسم (يقلل مهام الإشراف)</label>
-                        </div>
-
-                        <div class="space-y-3">
-                            <p class="text-sm font-bold text-gray-700">توزيع الحصص الأسبوعي:</p>
-                            <div class="max-h-96 overflow-y-auto custom-scrollbar pr-2 space-y-4" id="days-container">
-                                <!-- Days injected via JS -->
-                            </div>
-                        </div>
-
-                        <button onclick="addTeacher()" class="w-full btn-primary text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2">
-                            <i class="fas fa-save"></i> حفظ المعلم
-                        </button>
-                    </div>
-                </section>
-
-                <section class="card p-6 rounded-2xl shadow-sm">
-                    <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
-                        <i class="fas fa-sliders text-blue-900"></i> إعدادات المهام الأسبوعية
-                    </h2>
-                    <div class="space-y-4 text-sm">
-                        <div class="flex justify-between items-center">
-                            <label>إشراف الصلاة (20 د)</label>
-                            <input type="number" id="task-prayer" value="10" class="w-16 p-1 border rounded text-center font-bold">
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <label>إشراف الفسحة (25 د)</label>
-                            <input type="number" id="task-break" value="15" class="w-16 p-1 border rounded text-center font-bold">
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <label>إشراف الخروج (25 د)</label>
-                            <input type="number" id="task-exit" value="8" class="w-16 p-1 border rounded text-center font-bold">
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <label>المناداة (20 د)</label>
-                            <input type="number" id="task-call" value="5" class="w-16 p-1 border rounded text-center font-bold">
-                        </div>
-                    </div>
-                </section>
-            </div>
-
-            <!-- Content Area -->
-            <div class="lg:col-span-8 space-y-6">
-                
-                <!-- Controls -->
-                <div class="flex flex-wrap gap-3">
-                    <button onclick="distributeTasks()" class="bg-blue-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-black transition flex items-center gap-2">
-                        <i class="fas fa-magic"></i> توزيع المهام إلكترونياً
-                    </button>
-                    <button onclick="exportToCSV()" class="bg-white border border-gray-300 px-6 py-3 rounded-xl font-bold hover:bg-gray-50 transition flex items-center gap-2">
-                        <i class="fas fa-file-export"></i> تصدير البيانات
-                    </button>
-                    <button onclick="clearAll()" class="bg-red-50 text-red-600 px-6 py-3 rounded-xl font-bold hover:bg-red-100 transition flex items-center gap-2">
-                        <i class="fas fa-trash-alt"></i> مسح الكل
-                    </button>
-                </div>
-
-                <!-- Teacher Cards Grid -->
-                <div id="teachers-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- Cards injected via JS -->
-                </div>
-
-                <!-- Main Analysis Table -->
-                <div class="card rounded-2xl overflow-hidden shadow-sm">
-                    <div class="p-6 border-b border-gray-100 bg-gray-50/50">
-                        <h2 class="text-xl font-bold">مقارنة العبء الزمني والفجوة</h2>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-right">
-                            <thead>
-                                <tr class="bg-blue-900 text-white text-sm">
-                                    <th class="p-4">المعلم</th>
-                                    <th class="p-4">إجمالي الوقت</th>
-                                    <th class="p-4 text-center">النسبة</th>
-                                    <th class="p-4">الفجوة الزمنية (المتبقي)</th>
-                                    <th class="p-4 text-center">الإجراء</th>
-                                </tr>
-                            </thead>
-                            <tbody id="analysis-table-body" class="divide-y divide-gray-100">
-                                <tr>
-                                    <td colspan="5" class="p-10 text-center text-gray-400">لا يوجد بيانات حالياً</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </main>
-
-    <script>
-        // --- App Configuration & State ---
-        let teachers = [];
-        const DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'];
-        
-        const TIMING = {
-            sunTue: { p1: 40, p2: 40, p3: 40, p4: 35, p5: 35, p6: 35, p7: 35, p8: 40 },
-            wedThu: { p1: 40, p2: 40, p3: 40, p4: 45, p5: 45, p6: 45, p7: 40, p8: 0 },
-            tasks: { prayer: 20, break: 25, exit: 25, call: 20 }
-        };
-
-        // --- Initialization ---
-        document.addEventListener('DOMContentLoaded', () => {
-            renderDaySelectors();
-            loadSampleData();
-        });
-
-        function renderDaySelectors() {
-            const container = document.getElementById('days-container');
-            container.innerHTML = DAYS.map((day, idx) => `
-                <div class="bg-white border rounded-xl p-3">
-                    <p class="text-xs font-black text-blue-900 mb-2 uppercase tracking-wide">${day}</p>
-                    <div class="grid grid-cols-4 gap-2">
-                        ${[1,2,3,4,5,6,7,8].map(p => {
-                            if ((idx >= 3) && p === 8) return ''; // No 8th period on Wed/Thu
-                            return `
-                                <div onclick="togglePeriod(this, '${day}', ${p})" 
-                                     class="period-box p-2 text-center rounded-lg text-xs font-bold"
-                                     data-day="${day}" data-period="${p}">
-                                    ${p}
-                                </div>
-                            `;
-                        }).join('')}
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function togglePeriod(el, day, p) {
-            el.classList.toggle('selected');
-        }
-
-        // --- Core Logic ---
-        function formatTime(minutes) {
-            const hours = Math.floor(minutes / 60);
-            const mins = minutes % 60;
-            if (hours === 0) return `${mins} دقيقة`;
-            if (mins === 0) return `${hours} ساعة`;
-            return `${hours} س و ${mins} د`;
-        }
-
-        function addTeacher() {
-            const name = document.getElementById('teacher-name').value.trim();
-            const isHead = document.getElementById('is-head').checked;
-            
-            if (!name) return alert('يرجى إدخال اسم المعلم');
-
-            const selectedPeriods = [];
-            document.querySelectorAll('.period-box.selected').forEach(box => {
-                const day = box.dataset.day;
-                const p = parseInt(box.dataset.period);
-                let time = 0;
-                
-                if (day === 'الأربعاء' || day === 'الخميس') {
-                    time = TIMING.wedThu[`p${p}`];
-                } else {
-                    time = TIMING.sunTue[`p${p}`];
-                }
-
-                selectedPeriods.push({ day, p, time });
-            });
-
-            if (selectedPeriods.length === 0) return alert('يرجى اختيار حصة واحدة على الأقل');
-
-            const classMinutes = selectedPeriods.reduce((sum, item) => sum + item.time, 0);
-
-            const teacher = {
-                id: Date.now(),
-                name,
-                isHead,
-                classMinutes,
-                selectedPeriods,
-                tasks: { prayer: 0, break: 0, exit: 0, call: 0 },
-                totalMinutes: classMinutes
-            };
-
-            teachers.push(teacher);
-            resetForm();
-            updateUI();
-        }
-
-        function resetForm() {
-            document.getElementById('teacher-name').value = '';
-            document.getElementById('is-head').checked = false;
-            document.querySelectorAll('.period-box').forEach(b => b.classList.remove('selected'));
-        }
-
-        function distributeTasks() {
-            if (teachers.length === 0) return;
-
-            // Reset
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -745,7 +418,20 @@
                         ${t.isHead ? '<div class="absolute top-0 left-0 bg-amber-100 text-amber-700 px-3 py-1 rounded-br-xl text-xs font-bold"><i class="fas fa-medal mr-1"></i> رئيس قسم</div>' : ''}
                         <div class="flex justify-between items-start mb-4">
                             <h3 class="font-bold text-lg">${t.name}</h3>
-                            <button onclick="removeTeacher(${t.ap(day => {
+                            <button onclick="removeTeacher(${t.id})" class="text-gray-300 hover:text-red-500"><i class="fas fa-times"></i></button>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3 mb-4">
+                            <div class="bg-gray-50 p-2 rounded-lg text-center">
+                                <p class="text-[10px] text-gray-400 font-bold uppercase">الحصص</p>
+                                <p class="text-sm font-bold">${formatTime(t.classMinutes)}</p>
+                            </div>
+                            <div class="bg-gray-50 p-2 rounded-lg text-center">
+                                <p class="text-[10px] text-gray-400 font-bold uppercase">الإشراف</p>
+                                <p class="text-sm font-bold text-blue-600">${formatTime(taskMins)}</p>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap gap-1">
+                            ${DAYS.map(day => {
                                 const count = t.selectedPeriods.filter(p => p.day === day).length;
                                 return count > 0 ? `<span class="px-2 py-1 bg-blue-50 text-blue-700 text-[10px] rounded-md font-bold">${day}: ${count}</span>` : '';
                             }).join('')}
@@ -768,15 +454,60 @@
             tbody.innerHTML = teachers.map(t => {
                 const gap = maxMins - t.totalMinutes;
                 const percentage = avgMins > 0 ? (t.totalMinutes / avgMins * 100).toFixed(0) : 100;
-                
                 let statusColor = 'text-emerald-600';
                 if (percentage > 115) statusColor = 'text-red-600';
                 else if (percentage < 85) statusColor = 'text-amber-600';
 
                 return `
-                    <tr class="hover:bg-slate-50 transition">
-                        <td class="p-4 font-bold">
-                            ${t.name} 
-                            ${t.isHead ? '<i class="fas fa-medal head-medal ml-1" title="رئيس قسم"></i>' : ''}
+                    <tr class="hover:bg-slate-50 transition border-b border-gray-50">
+                        <td class="p-4 font-bold text-sm">${t.name} ${t.isHead ? '🥇' : ''}</td>
+                        <td class="p-4 text-center font-bold text-sm">${formatTime(t.totalMinutes)}</td>
+                        <td class="p-4 text-center">
+                            <span class="px-2 py-1 rounded-full text-[10px] font-black ${statusColor} bg-opacity-10">${percentage}%</span>
                         </td>
-            
+                        <td class="p-4">
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] font-bold text-gray-400">${formatTime(gap)}</span>
+                                <div class="flex-1 h-1 bg-gray-100 rounded-full">
+                                    <div class="h-full bg-blue-500 rounded-full" style="width: ${(t.totalMinutes/maxMins*100)}%"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="p-4 text-center">
+                            <button onclick="removeTeacher(${t.id})" class="text-red-300 hover:text-red-600"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function removeTeacher(id) {
+            teachers = teachers.filter(t => t.id !== id);
+            updateUI();
+        }
+
+        function clearAll() {
+            if(confirm('سيتم حذف جميع المعلمين، هل أنت متأكد؟')) {
+                teachers = [];
+                updateUI();
+            }
+        }
+
+        function exportToCSV() {
+            if (teachers.length === 0) return;
+            let csv = "\uFEFFاسم المعلم,إجمالي الدقائق,النسبة\n";
+            const avg = teachers.reduce((sum, t) => sum + t.totalMinutes, 0) / teachers.length;
+            teachers.forEach(t => {
+                const perc = (t.totalMinutes / avg * 100).toFixed(0) + "%";
+                csv += `${t.name},${t.totalMinutes},${perc}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `جدول_المهام_${new Date().toLocaleDateString()}.csv`;
+            link.click();
+        }
+    </script>
+</body>
+</html>
+
