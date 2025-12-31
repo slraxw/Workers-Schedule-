@@ -73,7 +73,6 @@
 </head>
 <body class="bg-slate-50">
 
-    <!-- Header -->
     <header class="gradient-header text-white py-8 mb-8 shadow-lg">
         <div class="container mx-auto px-4 text-center">
             <h1 class="text-3xl md:text-4xl font-extrabold mb-2">نظام التوزيع الذكي للمهام التعليمية</h1>
@@ -83,7 +82,6 @@
 
     <main class="container mx-auto px-4 pb-20">
         
-        <!-- Top Stats Row -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div class="card p-6 rounded-2xl flex items-center space-x-reverse space-x-4 border-r-4 border-blue-600">
                 <div class="bg-blue-100 p-3 rounded-xl"><i class="fas fa-users text-blue-600 text-xl"></i></div>
@@ -117,14 +115,14 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             
-            <!-- Sidebar: Add Teacher -->
             <div class="lg:col-span-4 space-y-6">
                 <section class="card p-6 rounded-2xl shadow-sm border-t-4 border-blue-900">
-                    <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
+                    <h2 id="form-title" class="text-xl font-bold mb-6 flex items-center gap-2">
                         <i class="fas fa-user-plus text-blue-900"></i> إضافة معلم جديد
                     </h2>
                     
                     <div class="space-y-4">
+                        <input type="hidden" id="edit-teacher-id" value="">
                         <div>
                             <label class="block text-sm font-bold mb-2 text-gray-700">اسم المعلم</label>
                             <input type="text" id="teacher-name" class="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="مثال: أ. محمد العلي">
@@ -138,13 +136,13 @@
                         <div class="space-y-3">
                             <p class="text-sm font-bold text-gray-700">توزيع الحصص الأسبوعي:</p>
                             <div class="max-h-96 overflow-y-auto custom-scrollbar pr-2 space-y-4" id="days-container">
-                                <!-- Days injected via JS -->
-                            </div>
+                                </div>
                         </div>
 
-                        <button onclick="addTeacher()" class="w-full btn-primary text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2">
+                        <button id="save-btn" onclick="addTeacher()" class="w-full btn-primary text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2">
                             <i class="fas fa-save"></i> حفظ المعلم
                         </button>
+                        <button id="cancel-edit-btn" onclick="resetForm()" class="hidden w-full bg-gray-200 text-gray-700 font-bold py-2 rounded-xl">إلغاء التعديل</button>
                     </div>
                 </section>
 
@@ -173,28 +171,20 @@
                 </section>
             </div>
 
-            <!-- Content Area -->
             <div class="lg:col-span-8 space-y-6">
                 
-                <!-- Controls -->
                 <div class="flex flex-wrap gap-3">
                     <button onclick="distributeTasks()" class="bg-blue-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-black transition flex items-center gap-2">
                         <i class="fas fa-magic"></i> توزيع المهام إلكترونياً
-                    </button>
-                    <button onclick="exportToCSV()" class="bg-white border border-gray-300 px-6 py-3 rounded-xl font-bold hover:bg-gray-50 transition flex items-center gap-2">
-                        <i class="fas fa-file-export"></i> تصدير البيانات
                     </button>
                     <button onclick="clearAll()" class="bg-red-50 text-red-600 px-6 py-3 rounded-xl font-bold hover:bg-red-100 transition flex items-center gap-2">
                         <i class="fas fa-trash-alt"></i> مسح الكل
                     </button>
                 </div>
 
-                <!-- Teacher Cards Grid -->
                 <div id="teachers-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- Cards injected via JS -->
-                </div>
+                    </div>
 
-                <!-- Main Analysis Table -->
                 <div class="card rounded-2xl overflow-hidden shadow-sm">
                     <div class="p-6 border-b border-gray-100 bg-gray-50/50">
                         <h2 class="text-xl font-bold">مقارنة العبء الزمني والفجوة</h2>
@@ -205,14 +195,13 @@
                                 <tr class="bg-blue-900 text-white text-sm">
                                     <th class="p-4">المعلم</th>
                                     <th class="p-4 text-center">إجمالي الوقت</th>
-                                    <th class="p-4 text-center">النسبة</th>
                                     <th class="p-4">الفجوة الزمنية (المتبقي)</th>
                                     <th class="p-4 text-center">الإجراء</th>
                                 </tr>
                             </thead>
                             <tbody id="analysis-table-body" class="divide-y divide-gray-100">
                                 <tr>
-                                    <td colspan="5" class="p-10 text-center text-gray-400">لا يوجد بيانات حالياً</td>
+                                    <td colspan="4" class="p-10 text-center text-gray-400">لا يوجد بيانات حالياً</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -224,7 +213,6 @@
     </main>
 
     <script>
-        // --- App Configuration & State ---
         let teachers = [];
         const DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'];
         
@@ -234,21 +222,6 @@
             tasks: { prayer: 20, break: 25, exit: 25, call: 20 }
         };
 
-        // --- Complete Data from your schedule ---
-        const initialTeachersData = [
-            { name: "Mr. Khaled", schedule: { "الأحد": [1,2,4], "الاثنين": [3,5,6], "الثلاثاء": [1,2,6], "الأربعاء": [2,4,7], "الخميس": [1,3,5] } },
-            { name: "Mr. Ahmed", schedule: { "الأحد": [3,5,7], "الاثنين": [1,2,4], "الثلاثاء": [3,5,7], "الأربعاء": [1,6], "الخميس": [2,4,6] } },
-            { name: "Mr. Mohammad", schedule: { "الأحد": [6,7], "الاثنين": [6,7], "الثلاثاء": [2,4,5], "الأربعاء": [3,5,6], "الخميس": [6,7] } },
-            { name: "Mr. Abdullah", schedule: { "الأحد": [2,4,5], "الاثنين": [3,5], "الثلاثاء": [7,6], "الأربعاء": [7,4], "الخميس": [1,2,3] } },
-            { name: "Mr. Ibrahim", schedule: { "الأحد": [1,3,6], "الاثنين": [2,4,5], "الثلاثاء": [5,6,1], "الأربعاء": [1,2,5], "الخميس": [3,4,1] } },
-            { name: "Mr. Saleh", schedule: { "الأحد": [5,6,3], "الاثنين": [1,3,4], "الثلاثاء": [1,2,4], "الأربعاء": [4,5,2], "الخميس": [5,6,2] } },
-            { name: "Mr. Abdulrahman", schedule: { "الأحد": [4,7,1], "الاثنين": [5,6,2], "الثلاثاء": [3,4,6], "الأربعاء": [2,3,5], "الخميس": [7,4] } },
-            { name: "Mr. Fahad", schedule: { "الأحد": [2,3,6], "الاثنين": [4,7,1], "الثلاثاء": [1,5,3], "الأربعاء": [6,7,2], "الخميس": [1,2,5] } },
-            { name: "Mr. Ali", schedule: { "الأحد": [1,5,4], "الاثنين": [2,3,7], "الثلاثاء": [6,7,4], "الأربعاء": [4,5,1], "الخميس": [3,4,6] } },
-            { name: "Mr. Sultan", schedule: { "الأحد": [4,6,2], "الاثنين": [1,6,3], "الثلاثاء": [2,3,5], "الأربعاء": [1,3,6], "الخميس": [5,6,7] } }
-        ];
-
-        // --- Initialization ---
         document.addEventListener('DOMContentLoaded', () => {
             renderDaySelectors();
             loadPersistentData();
@@ -258,9 +231,8 @@
             const saved = localStorage.getItem('teacher_data_sultan');
             if (saved) {
                 teachers = JSON.parse(saved);
+                sortTeachers();
                 updateUI();
-            } else {
-                importInitialData();
             }
         }
 
@@ -268,29 +240,9 @@
             localStorage.setItem('teacher_data_sultan', JSON.stringify(teachers));
         }
 
-        function importInitialData() {
-            teachers = [];
-            initialTeachersData.forEach(data => {
-                const selectedPeriods = [];
-                let classMinutes = 0;
-                for (const day in data.schedule) {
-                    data.schedule[day].forEach(p => {
-                        let time = (day === 'الأربعاء' || day === 'الخميس') ? TIMING.wedThu[`p${p}`] : TIMING.sunTue[`p${p}`];
-                        selectedPeriods.push({ day, p, time });
-                        classMinutes += time;
-                    });
-                }
-                teachers.push({
-                    id: Date.now() + Math.random(),
-                    name: data.name,
-                    isHead: false,
-                    classMinutes,
-                    selectedPeriods,
-                    tasks: { prayer: 0, break: 0, exit: 0, call: 0 },
-                    totalMinutes: classMinutes
-                });
-            });
-            updateUI();
+        function sortTeachers() {
+            // الترتيب من الأكثر ساعات إلى الأقل
+            teachers.sort((a, b) => b.totalMinutes - a.totalMinutes);
         }
 
         function renderDaySelectors() {
@@ -329,7 +281,9 @@
         function addTeacher() {
             const name = document.getElementById('teacher-name').value.trim();
             const isHead = document.getElementById('is-head').checked;
-            if (!name) return;
+            const editId = document.getElementById('edit-teacher-id').value;
+
+            if (!name) return alert("يرجى إدخال اسم المعلم");
 
             const selectedPeriods = [];
             document.querySelectorAll('.period-box.selected').forEach(box => {
@@ -339,30 +293,93 @@
                 selectedPeriods.push({ day, p, time });
             });
 
-            if (selectedPeriods.length === 0) return;
+            if (selectedPeriods.length === 0) return alert("يرجى اختيار حصة واحدة على الأقل");
 
             const classMinutes = selectedPeriods.reduce((sum, item) => sum + item.time, 0);
-            teachers.push({
-                id: Date.now(),
-                name,
-                isHead,
-                classMinutes,
-                selectedPeriods,
-                tasks: { prayer: 0, break: 0, exit: 0, call: 0 },
-                totalMinutes: classMinutes
-            });
+
+            if (editId) {
+                // تحديث معلم موجود
+                const index = teachers.findIndex(t => t.id == editId);
+                if (index !== -1) {
+                    teachers[index].name = name;
+                    teachers[index].isHead = isHead;
+                    teachers[index].selectedPeriods = selectedPeriods;
+                    teachers[index].classMinutes = classMinutes;
+                    teachers[index].totalMinutes = classMinutes + calculateTaskMinutes(teachers[index].tasks);
+                }
+            } else {
+                // إضافة معلم جديد
+                teachers.push({
+                    id: Date.now(),
+                    name,
+                    isHead,
+                    classMinutes,
+                    selectedPeriods,
+                    tasks: { prayer: 0, break: 0, exit: 0, call: 0 },
+                    totalMinutes: classMinutes
+                });
+            }
+
             resetForm();
+            sortTeachers();
             updateUI();
         }
 
+        function calculateTaskMinutes(tasks) {
+            return (tasks.prayer * 20) + (tasks.break * 25) + (tasks.exit * 25) + (tasks.call * 20);
+        }
+
+        function editTeacher(id) {
+            const t = teachers.find(teacher => teacher.id == id);
+            if (!t) return;
+
+            document.getElementById('edit-teacher-id').value = t.id;
+            document.getElementById('teacher-name').value = t.name;
+            document.getElementById('is-head').checked = t.isHead;
+            
+            document.getElementById('form-title').innerHTML = `<i class="fas fa-edit text-amber-600"></i> تعديل بيانات: ${t.name}`;
+            document.getElementById('save-btn').innerHTML = `<i class="fas fa-check"></i> تحديث بيانات المعلم`;
+            document.getElementById('cancel-edit-btn').classList.remove('hidden');
+
+            // إعادة تعيين الحصص المحددة
+            document.querySelectorAll('.period-box').forEach(box => {
+                box.classList.remove('selected');
+                const day = box.dataset.day;
+                const p = parseInt(box.dataset.period);
+                const isSelected = t.selectedPeriods.some(sp => sp.day === day && sp.p === p);
+                if (isSelected) box.classList.add('selected');
+            });
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
         function resetForm() {
+            document.getElementById('edit-teacher-id').value = '';
             document.getElementById('teacher-name').value = '';
             document.getElementById('is-head').checked = false;
+            document.getElementById('form-title').innerHTML = `<i class="fas fa-user-plus text-blue-900"></i> إضافة معلم جديد`;
+            document.getElementById('save-btn').innerHTML = `<i class="fas fa-save"></i> حفظ المعلم`;
+            document.getElementById('cancel-edit-btn').classList.add('hidden');
             document.querySelectorAll('.period-box').forEach(b => b.classList.remove('selected'));
+        }
+
+        function removeTeacher(id) {
+            if(confirm('هل أنت متأكد من حذف هذا المعلم؟')) {
+                teachers = teachers.filter(t => t.id !== id);
+                updateUI();
+            }
+        }
+
+        function clearAll() {
+            if(confirm('سيتم مسح جميع المعلمين، هل أنت متأكد؟')) {
+                teachers = [];
+                updateUI();
+            }
         }
 
         function distributeTasks() {
             if (teachers.length === 0) return;
+            
             teachers.forEach(t => {
                 t.tasks = { prayer: 0, break: 0, exit: 0, call: 0 };
                 t.totalMinutes = t.classMinutes;
@@ -388,6 +405,7 @@
                     remaining--;
                 }
             });
+            sortTeachers(); // إعادة الترتيب بعد توزيع المهام
             updateUI();
         }
 
@@ -411,30 +429,31 @@
 
         function renderTeachersGrid() {
             const grid = document.getElementById('teachers-grid');
+            if (teachers.length === 0) {
+                grid.innerHTML = '';
+                return;
+            }
             grid.innerHTML = teachers.map(t => {
-                const taskMins = (t.tasks.prayer * 20) + (t.tasks.break * 25) + (t.tasks.exit * 25) + (t.tasks.call * 20);
+                const taskMins = calculateTaskMinutes(t.tasks);
                 return `
                     <div class="card p-5 rounded-2xl relative overflow-hidden">
                         ${t.isHead ? '<div class="absolute top-0 left-0 bg-amber-100 text-amber-700 px-3 py-1 rounded-br-xl text-xs font-bold"><i class="fas fa-medal mr-1"></i> رئيس قسم</div>' : ''}
                         <div class="flex justify-between items-start mb-4">
                             <h3 class="font-bold text-lg">${t.name}</h3>
-                            <button onclick="removeTeacher(${t.id})" class="text-gray-300 hover:text-red-500"><i class="fas fa-times"></i></button>
-                        </div>
-                        <div class="grid grid-cols-2 gap-3 mb-4">
-                            <div class="bg-gray-50 p-2 rounded-lg text-center">
-                                <p class="text-[10px] text-gray-400 font-bold uppercase">الحصص</p>
-                                <p class="text-sm font-bold">${formatTime(t.classMinutes)}</p>
-                            </div>
-                            <div class="bg-gray-50 p-2 rounded-lg text-center">
-                                <p class="text-[10px] text-gray-400 font-bold uppercase">الإشراف</p>
-                                <p class="text-sm font-bold text-blue-600">${formatTime(taskMins)}</p>
+                            <div class="flex gap-2">
+                                <button onclick="editTeacher(${t.id})" class="text-blue-600 hover:text-blue-800 p-2"><i class="fas fa-edit"></i></button>
+                                <button onclick="removeTeacher(${t.id})" class="text-red-400 hover:text-red-600 p-2"><i class="fas fa-trash"></i></button>
                             </div>
                         </div>
-                        <div class="flex flex-wrap gap-1">
-                            ${DAYS.map(day => {
-                                const count = t.selectedPeriods.filter(p => p.day === day).length;
-                                return count > 0 ? `<span class="px-2 py-1 bg-blue-50 text-blue-700 text-[10px] rounded-md font-bold">${day}: ${count}</span>` : '';
-                            }).join('')}
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div class="bg-slate-50 p-2 rounded-lg">
+                                <span class="block text-gray-500 text-xs">حصص تدريس</span>
+                                <span class="font-bold">${formatTime(t.classMinutes)} (${t.selectedPeriods.length})</span>
+                            </div>
+                            <div class="bg-blue-50 p-2 rounded-lg">
+                                <span class="block text-blue-500 text-xs">مهام إضافية</span>
+                                <span class="font-bold">${formatTime(taskMins)}</span>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -444,70 +463,33 @@
         function renderAnalysisTable() {
             const tbody = document.getElementById('analysis-table-body');
             if (teachers.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-gray-400">لا يوجد بيانات حالياً</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" class="p-10 text-center text-gray-400">لا يوجد بيانات حالياً</td></tr>';
                 return;
             }
 
-            const maxMins = Math.max(...teachers.map(t => t.totalMinutes));
-            const avgMins = teachers.reduce((sum, t) => sum + t.totalMinutes, 0) / teachers.length;
+            const maxTime = Math.max(...teachers.map(t => t.totalMinutes));
 
             tbody.innerHTML = teachers.map(t => {
-                const gap = maxMins - t.totalMinutes;
-                const percentage = avgMins > 0 ? (t.totalMinutes / avgMins * 100).toFixed(0) : 100;
-                let statusColor = 'text-emerald-600';
-                if (percentage > 115) statusColor = 'text-red-600';
-                else if (percentage < 85) statusColor = 'text-amber-600';
-
+                const gap = maxTime - t.totalMinutes;
                 return `
-                    <tr class="hover:bg-slate-50 transition border-b border-gray-50">
-                        <td class="p-4 font-bold text-sm">${t.name} ${t.isHead ? '🥇' : ''}</td>
-                        <td class="p-4 text-center font-bold text-sm">${formatTime(t.totalMinutes)}</td>
-                        <td class="p-4 text-center">
-                            <span class="px-2 py-1 rounded-full text-[10px] font-black ${statusColor} bg-opacity-10">${percentage}%</span>
-                        </td>
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="p-4 font-bold">${t.name}</td>
+                        <td class="p-4 text-center font-black text-blue-700">${formatTime(t.totalMinutes)}</td>
                         <td class="p-4">
                             <div class="flex items-center gap-2">
-                                <span class="text-[10px] font-bold text-gray-400">${formatTime(gap)}</span>
-                                <div class="flex-1 h-1 bg-gray-100 rounded-full">
-                                    <div class="h-full bg-blue-500 rounded-full" style="width: ${(t.totalMinutes/maxMins*100)}%"></div>
+                                <div class="flex-1 bg-gray-200 h-2 rounded-full overflow-hidden">
+                                    <div class="bg-blue-600 h-full" style="width: ${(t.totalMinutes/maxTime*100)}%"></div>
                                 </div>
+                                <span class="text-xs font-bold text-gray-500">${gap > 0 ? 'فجوة ' + formatTime(gap) : 'الأعلى'}</span>
                             </div>
                         </td>
                         <td class="p-4 text-center">
-                            <button onclick="removeTeacher(${t.id})" class="text-red-300 hover:text-red-600"><i class="fas fa-trash"></i></button>
+                            <button onclick="editTeacher(${t.id})" class="text-blue-600 font-bold text-sm underline">تعديل</button>
                         </td>
                     </tr>
                 `;
             }).join('');
         }
-
-        function removeTeacher(id) {
-            teachers = teachers.filter(t => t.id !== id);
-            updateUI();
-        }
-
-        function clearAll() {
-            if(confirm('سيتم حذف جميع المعلمين، هل أنت متأكد؟')) {
-                teachers = [];
-                updateUI();
-            }
-        }
-
-        function exportToCSV() {
-            if (teachers.length === 0) return;
-            let csv = "\uFEFFاسم المعلم,إجمالي الدقائق,النسبة\n";
-            const avg = teachers.reduce((sum, t) => sum + t.totalMinutes, 0) / teachers.length;
-            teachers.forEach(t => {
-                const perc = (t.totalMinutes / avg * 100).toFixed(0) + "%";
-                csv += `${t.name},${t.totalMinutes},${perc}\n`;
-            });
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = `جدول_المهام_${new Date().toLocaleDateString()}.csv`;
-            link.click();
-        }
     </script>
 </body>
 </html>
-
