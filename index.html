@@ -64,11 +64,6 @@
             background: #cbd5e1;
             border-radius: 10px;
         }
-
-        .head-medal {
-            color: #fbbf24;
-            filter: drop-shadow(0 0 2px rgba(251, 191, 36, 0.4));
-        }
     </style>
 </head>
 <body class="bg-slate-50">
@@ -142,7 +137,7 @@
                         <button id="save-btn" onclick="addTeacher()" class="w-full btn-primary text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2">
                             <i class="fas fa-save"></i> حفظ المعلم
                         </button>
-                        <button id="cancel-edit-btn" onclick="resetForm()" class="hidden w-full bg-gray-200 text-gray-700 font-bold py-2 rounded-xl">إلغاء التعديل</button>
+                        <button id="cancel-edit-btn" onclick="resetForm()" class="hidden w-full bg-gray-200 text-gray-700 font-bold py-2 rounded-xl mt-2">إلغاء التعديل</button>
                     </div>
                 </section>
 
@@ -153,19 +148,19 @@
                     <div class="space-y-4 text-sm">
                         <div class="flex justify-between items-center">
                             <label>إشراف الصلاة (20 د)</label>
-                            <input type="number" id="task-prayer" value="10" class="w-16 p-1 border rounded text-center font-bold">
+                            <input type="number" id="task-prayer" value="10" oninput="recalculateAllTotalMinutes()" class="w-16 p-1 border rounded text-center font-bold">
                         </div>
                         <div class="flex justify-between items-center">
                             <label>إشراف الفسحة (25 د)</label>
-                            <input type="number" id="task-break" value="15" class="w-16 p-1 border rounded text-center font-bold">
+                            <input type="number" id="task-break" value="15" oninput="recalculateAllTotalMinutes()" class="w-16 p-1 border rounded text-center font-bold">
                         </div>
                         <div class="flex justify-between items-center">
                             <label>إشراف الخروج (25 د)</label>
-                            <input type="number" id="task-exit" value="8" class="w-16 p-1 border rounded text-center font-bold">
+                            <input type="number" id="task-exit" value="8" oninput="recalculateAllTotalMinutes()" class="w-16 p-1 border rounded text-center font-bold">
                         </div>
                         <div class="flex justify-between items-center">
                             <label>المناداة (20 د)</label>
-                            <input type="number" id="task-call" value="5" class="w-16 p-1 border rounded text-center font-bold">
+                            <input type="number" id="task-call" value="5" oninput="recalculateAllTotalMinutes()" class="w-16 p-1 border rounded text-center font-bold">
                         </div>
                     </div>
                 </section>
@@ -207,7 +202,6 @@
                         </table>
                     </div>
                 </div>
-
             </div>
         </div>
     </main>
@@ -219,7 +213,7 @@
         const TIMING = {
             sunTue: { p1: 40, p2: 40, p3: 40, p4: 35, p5: 35, p6: 35, p7: 35, p8: 40 },
             wedThu: { p1: 40, p2: 40, p3: 40, p4: 45, p5: 45, p6: 45, p7: 40, p8: 0 },
-            tasks: { prayer: 20, break: 25, exit: 25, call: 20 }
+            taskDurations: { prayer: 20, break: 25, exit: 25, call: 20 }
         };
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -231,8 +225,7 @@
             const saved = localStorage.getItem('teacher_data_sultan');
             if (saved) {
                 teachers = JSON.parse(saved);
-                sortTeachers();
-                updateUI();
+                recalculateAllTotalMinutes();
             }
         }
 
@@ -241,8 +234,17 @@
         }
 
         function sortTeachers() {
-            // الترتيب من الأكثر ساعات إلى الأقل
             teachers.sort((a, b) => b.totalMinutes - a.totalMinutes);
+        }
+
+        // وظيفة جديدة لإعادة حساب الدقائق بناءً على الإعدادات الحالية دون حذف البيانات
+        function recalculateAllTotalMinutes() {
+            teachers.forEach(t => {
+                const taskMins = (t.tasks.prayer * 20) + (t.tasks.break * 25) + (t.tasks.exit * 25) + (t.tasks.call * 20);
+                t.totalMinutes = t.classMinutes + taskMins;
+            });
+            sortTeachers();
+            updateUI();
         }
 
         function renderDaySelectors() {
@@ -253,13 +255,7 @@
                     <div class="grid grid-cols-4 gap-2">
                         ${[1,2,3,4,5,6,7,8].map(p => {
                             if ((idx >= 3) && p === 8) return ''; 
-                            return `
-                                <div onclick="togglePeriod(this, '${day}', ${p})" 
-                                     class="period-box p-2 text-center rounded-lg text-xs font-bold"
-                                     data-day="${day}" data-period="${p}">
-                                    ${p}
-                                </div>
-                            `;
+                            return `<div onclick="togglePeriod(this, '${day}', ${p})" class="period-box p-2 text-center rounded-lg text-xs font-bold" data-day="${day}" data-period="${p}">${p}</div>`;
                         }).join('')}
                     </div>
                 </div>
@@ -293,22 +289,17 @@
                 selectedPeriods.push({ day, p, time });
             });
 
-            if (selectedPeriods.length === 0) return alert("يرجى اختيار حصة واحدة على الأقل");
-
             const classMinutes = selectedPeriods.reduce((sum, item) => sum + item.time, 0);
 
             if (editId) {
-                // تحديث معلم موجود
                 const index = teachers.findIndex(t => t.id == editId);
                 if (index !== -1) {
                     teachers[index].name = name;
                     teachers[index].isHead = isHead;
                     teachers[index].selectedPeriods = selectedPeriods;
                     teachers[index].classMinutes = classMinutes;
-                    teachers[index].totalMinutes = classMinutes + calculateTaskMinutes(teachers[index].tasks);
                 }
             } else {
-                // إضافة معلم جديد
                 teachers.push({
                     id: Date.now(),
                     name,
@@ -321,12 +312,7 @@
             }
 
             resetForm();
-            sortTeachers();
-            updateUI();
-        }
-
-        function calculateTaskMinutes(tasks) {
-            return (tasks.prayer * 20) + (tasks.break * 25) + (tasks.exit * 25) + (tasks.call * 20);
+            recalculateAllTotalMinutes();
         }
 
         function editTeacher(id) {
@@ -341,15 +327,11 @@
             document.getElementById('save-btn').innerHTML = `<i class="fas fa-check"></i> تحديث بيانات المعلم`;
             document.getElementById('cancel-edit-btn').classList.remove('hidden');
 
-            // إعادة تعيين الحصص المحددة
             document.querySelectorAll('.period-box').forEach(box => {
                 box.classList.remove('selected');
-                const day = box.dataset.day;
-                const p = parseInt(box.dataset.period);
-                const isSelected = t.selectedPeriods.some(sp => sp.day === day && sp.p === p);
+                const isSelected = t.selectedPeriods.some(sp => sp.day === box.dataset.day && sp.p === parseInt(box.dataset.period));
                 if (isSelected) box.classList.add('selected');
             });
-            
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -366,7 +348,7 @@
         function removeTeacher(id) {
             if(confirm('هل أنت متأكد من حذف هذا المعلم؟')) {
                 teachers = teachers.filter(t => t.id !== id);
-                updateUI();
+                recalculateAllTotalMinutes();
             }
         }
 
@@ -405,8 +387,7 @@
                     remaining--;
                 }
             });
-            sortTeachers(); // إعادة الترتيب بعد توزيع المهام
-            updateUI();
+            recalculateAllTotalMinutes();
         }
 
         function updateUI() {
@@ -429,12 +410,9 @@
 
         function renderTeachersGrid() {
             const grid = document.getElementById('teachers-grid');
-            if (teachers.length === 0) {
-                grid.innerHTML = '';
-                return;
-            }
+            if (teachers.length === 0) { grid.innerHTML = ''; return; }
             grid.innerHTML = teachers.map(t => {
-                const taskMins = calculateTaskMinutes(t.tasks);
+                const taskMins = (t.tasks.prayer * 20) + (t.tasks.break * 25) + (t.tasks.exit * 25) + (t.tasks.call * 20);
                 return `
                     <div class="card p-5 rounded-2xl relative overflow-hidden">
                         ${t.isHead ? '<div class="absolute top-0 left-0 bg-amber-100 text-amber-700 px-3 py-1 rounded-br-xl text-xs font-bold"><i class="fas fa-medal mr-1"></i> رئيس قسم</div>' : ''}
@@ -446,14 +424,8 @@
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-4 text-sm">
-                            <div class="bg-slate-50 p-2 rounded-lg">
-                                <span class="block text-gray-500 text-xs">حصص تدريس</span>
-                                <span class="font-bold">${formatTime(t.classMinutes)} (${t.selectedPeriods.length})</span>
-                            </div>
-                            <div class="bg-blue-50 p-2 rounded-lg">
-                                <span class="block text-blue-500 text-xs">مهام إضافية</span>
-                                <span class="font-bold">${formatTime(taskMins)}</span>
-                            </div>
+                            <div class="bg-slate-50 p-2 rounded-lg"><span class="block text-gray-500 text-xs">حصص تدريس</span><span class="font-bold">${formatTime(t.classMinutes)} (${t.selectedPeriods.length})</span></div>
+                            <div class="bg-blue-50 p-2 rounded-lg"><span class="block text-blue-500 text-xs">مهام إضافية</span><span class="font-bold">${formatTime(taskMins)}</span></div>
                         </div>
                     </div>
                 `;
@@ -466,9 +438,7 @@
                 tbody.innerHTML = '<tr><td colspan="4" class="p-10 text-center text-gray-400">لا يوجد بيانات حالياً</td></tr>';
                 return;
             }
-
             const maxTime = Math.max(...teachers.map(t => t.totalMinutes));
-
             tbody.innerHTML = teachers.map(t => {
                 const gap = maxTime - t.totalMinutes;
                 return `
@@ -478,14 +448,12 @@
                         <td class="p-4">
                             <div class="flex items-center gap-2">
                                 <div class="flex-1 bg-gray-200 h-2 rounded-full overflow-hidden">
-                                    <div class="bg-blue-600 h-full" style="width: ${(t.totalMinutes/maxTime*100)}%"></div>
+                                    <div class="bg-blue-600 h-full" style="width: ${maxTime > 0 ? (t.totalMinutes/maxTime*100) : 0}%"></div>
                                 </div>
                                 <span class="text-xs font-bold text-gray-500">${gap > 0 ? 'فجوة ' + formatTime(gap) : 'الأعلى'}</span>
                             </div>
                         </td>
-                        <td class="p-4 text-center">
-                            <button onclick="editTeacher(${t.id})" class="text-blue-600 font-bold text-sm underline">تعديل</button>
-                        </td>
+                        <td class="p-4 text-center"><button onclick="editTeacher(${t.id})" class="text-blue-600 font-bold text-sm underline">تعديل</button></td>
                     </tr>
                 `;
             }).join('');
