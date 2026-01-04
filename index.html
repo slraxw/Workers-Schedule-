@@ -3,146 +3,316 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام إدارة المهام التعليمية - سلطان الوليعي</title>
+    <title>Sultan Smart System</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = { 
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#0f172a',
+                        darkCard: '#1e293b'
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap');
-        body { font-family: 'Tajawal', sans-serif; background-color: #f8fafc; color: #0a192f; }
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&family=Inter:wght@400;700;900&display=swap');
+        
+        body { transition: background 0.4s ease, color 0.4s ease; }
+        .ar { font-family: 'Tajawal', sans-serif; }
+        .en { font-family: 'Inter', sans-serif; direction: ltr; }
+        
         .gradient-header { background: linear-gradient(135deg, #0a192f 0%, #1e3a8a 100%); }
-        .card { background: white; border: 1px solid #e2e8f0; transition: all 0.3s ease; }
-        .period-box { cursor: pointer; border: 2px solid #e2e8f0; transition: all 0.2s; }
-        .period-box.selected { border-color: #3b82f6; background-color: #eff6ff; }
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        #login-overlay { position: fixed; inset: 0; background: #0a192f; z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        .period-box { cursor: pointer; border: 2px solid #e2e8f0; transition: all 0.2s; user-select: none; }
+        .period-box.selected { border-color: #3b82f6; background-color: #eff6ff; transform: scale(1.05); }
+        .dark .period-box { border-color: #334155; color: #94a3b8; }
+        .dark .period-box.selected { background-color: #1e40af; border-color: #3b82f6; color: white; }
+        
+        .stat-card-new { position: relative; overflow: hidden; transition: all 0.3s ease; }
+        .stat-icon-bg { position: absolute; left: -10px; bottom: -10px; font-size: 4rem; opacity: 0.1; transform: rotate(-15deg); }
+        .chart-container { position: relative; height: 300px; width: 100%; }
+        
+        .lang-switch-btn {
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 1.2rem;
+        }
     </style>
 </head>
-<body class="bg-slate-50">
+<body class="ar bg-slate-50 dark:bg-darkBg text-slate-900 dark:text-slate-200">
 
-    <div id="login-overlay">
-        <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md text-center mx-4">
-            <div class="bg-blue-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <i class="fas fa-lock text-blue-900 text-3xl"></i>
+    <!-- ضوابط التحكم العالمية - تعمل في كل الصفحات حتى شاشة الدخول -->
+    <div class="fixed top-6 left-6 z-[10000] flex flex-col gap-3">
+        <button onclick="toggleDarkMode()" class="bg-white/90 dark:bg-darkCard/90 backdrop-blur shadow-2xl p-3 rounded-2xl border border-slate-200 dark:border-slate-700 hover:scale-110 transition active:scale-95">
+            <i id="theme-icon-global" class="fas fa-moon text-blue-900 dark:text-yellow-400 text-xl"></i>
+        </button>
+        <button onclick="toggleLanguage()" class="lang-switch-btn bg-white/90 dark:bg-darkCard/90 backdrop-blur shadow-2xl rounded-2xl border border-slate-200 dark:border-slate-700 hover:scale-110 transition active:scale-95 text-blue-600 dark:text-blue-400">
+            <span id="lang-indicator">E</span>
+        </button>
+    </div>
+
+    <!-- شاشة تسجيل الدخول -->
+    <div id="login-overlay" class="fixed inset-0 bg-slate-100 dark:bg-darkBg z-[9999] flex items-center justify-center p-4 transition-colors duration-500">
+        <div class="bg-white dark:bg-darkCard p-10 rounded-[3.5rem] shadow-2xl w-full max-w-md text-center border border-slate-200 dark:border-slate-800 relative overflow-hidden">
+            <div class="bg-blue-100 dark:bg-blue-900/30 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-inner">
+                <i class="fas fa-user-shield text-blue-800 dark:text-blue-400 text-3xl"></i>
             </div>
-            <h2 class="text-2xl font-black mb-6 text-blue-900">تسجيل الدخول</h2>
+            <h2 id="login-title" class="text-3xl font-black mb-2 text-blue-900 dark:text-white">بوابة الوصول</h2>
+            <p id="login-subtitle" class="text-slate-400 text-sm mb-10">نظام أ. سلطان الوليعي</p>
             <div class="space-y-4">
-                <input type="text" id="user-input" placeholder="اسم المستخدم" class="w-full p-4 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-blue-500 text-center font-bold">
-                <input type="password" id="pass-input" placeholder="كلمة المرور" class="w-full p-4 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-blue-500 text-center font-bold">
-                <button onclick="checkLogin()" class="w-full bg-blue-800 text-white py-4 rounded-xl font-bold hover:bg-blue-900 transition shadow-lg">دخول</button>
+                <!-- الـ Placeholder يتغير ديناميكياً هنا -->
+                <input type="text" id="user-input" placeholder="اسم المستخدم" class="w-full p-5 rounded-2xl border dark:border-slate-700 dark:bg-slate-800 dark:text-white outline-none focus:ring-4 focus:ring-blue-500/20 text-center font-bold">
+                <input type="password" id="pass-input" placeholder="••••" class="w-full p-5 rounded-2xl border dark:border-slate-700 dark:bg-slate-800 dark:text-white outline-none focus:ring-4 focus:ring-blue-500/20 text-center font-bold">
+                <button onclick="checkLogin()" id="login-btn" class="w-full bg-blue-800 text-white py-5 rounded-2xl font-black hover:bg-blue-700 transition shadow-xl active:scale-95">دخول</button>
             </div>
-            <p id="error-msg" class="text-red-500 mt-4 text-sm font-bold hidden">خطأ في البيانات!</p>
+            <p id="error-msg" class="text-red-500 mt-6 text-sm font-bold hidden">خطأ في البيانات</p>
         </div>
     </div>
 
+    <!-- واجهة النظام الرئيسية -->
     <div id="app-content" style="display: none;">
-        <header class="gradient-header text-white py-6 mb-8 shadow-lg relative">
-            <div class="container mx-auto px-4 text-center">
-                <button onclick="logout()" class="absolute left-4 top-1/2 -translate-y-1/2 bg-red-600/20 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-xs transition">خروج</button>
-                <h1 class="text-3xl font-extrabold mb-1">نظام التوزيع الذكي للمهام التعليمية</h1>
-                <p class="text-blue-100 opacity-90 text-sm">أ. سلطان الوليعي - إدارة مهام كل معلم بشكل مستقل</p>
+        <header class="gradient-header text-white py-14 mb-10 shadow-2xl relative">
+            <div class="container mx-auto px-6 text-center">
+                <div class="absolute left-6 top-6">
+                    <button onclick="logout()" class="bg-white/10 hover:bg-red-500 px-6 py-2 rounded-xl text-xs font-black transition backdrop-blur-md border border-white/10">
+                        <i class="fas fa-power-off"></i> <span id="logout-text">خروج</span>
+                    </button>
+                </div>
+                <h1 id="main-title" class="text-5xl font-black mb-3">نظام إدارة المهام الذكي</h1>
+                <p id="main-subtitle" class="text-blue-100 opacity-90 font-bold text-lg">أ. سلطان الوليعي - تحليلات التوازن والعدالة</p>
             </div>
         </header>
 
-        <main class="container mx-auto px-4 pb-20">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <main class="container mx-auto px-6 pb-24">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
                 
-                <div class="lg:col-span-4 space-y-6">
-                    <section class="card p-6 rounded-2xl shadow-sm border-t-4 border-blue-900">
-                        <h2 id="form-title" class="text-xl font-bold mb-6 flex items-center gap-2 text-blue-900">
-                            <i class="fas fa-user-plus"></i> إضافة معلم جديد
+                <!-- مدخلات المعلم -->
+                <div class="lg:col-span-4 space-y-8">
+                    <section class="bg-white dark:bg-darkCard p-8 rounded-[3rem] shadow-xl border border-slate-100 dark:border-slate-800 border-t-[12px] border-t-blue-800">
+                        <h2 id="form-title" class="text-2xl font-black mb-8 flex items-center gap-3 text-blue-900 dark:text-blue-400">
+                            <i class="fas fa-plus-circle"></i> إضافة معلم
                         </h2>
                         
-                        <div class="space-y-4">
+                        <div class="space-y-6">
                             <input type="hidden" id="edit-teacher-id" value="">
-                            
                             <div>
-                                <label class="block text-sm font-bold mb-2 text-gray-700">اسم المعلم</label>
-                                <input type="text" id="teacher-name" class="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="اسم المعلم">
+                                <label id="label-name" class="block text-xs font-black mb-3 text-slate-400 uppercase tracking-widest">اسم المعلم</label>
+                                <input type="text" id="teacher-name" class="w-full p-5 rounded-2xl border dark:border-slate-700 dark:bg-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 font-bold">
                             </div>
 
-                            <div class="bg-blue-50 p-4 rounded-2xl space-y-3">
-                                <p class="text-xs font-bold text-blue-800 border-b border-blue-200 pb-1 mb-2">تخصيص المهام الأسبوعية لهذا المعلم (مرات التكرار):</p>
-                                <div class="grid grid-cols-2 gap-2">
-                                    <div class="flex flex-col">
-                                        <label class="text-[10px] text-gray-500 mb-1">إشراف صلاة (20د)</label>
-                                        <input type="number" id="task-prayer" value="0" min="0" class="p-2 rounded-lg border text-center font-bold outline-none">
+                            <div class="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-[2rem] border dark:border-slate-700 space-y-5">
+                                <p id="task-repeat-title" class="text-[11px] font-black text-blue-800 dark:text-blue-400 border-b dark:border-slate-700 pb-3">تكرار المهام الأسبوعية</p>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="space-y-1">
+                                        <label id="task-prayer-lbl" class="text-[10px] font-bold text-slate-400 px-1">إشراف صلاة</label>
+                                        <input type="number" id="task-prayer" value="0" class="w-full p-4 rounded-2xl border dark:border-slate-700 dark:bg-slate-900 text-center font-black">
                                     </div>
-                                    <div class="flex flex-col">
-                                        <label class="text-[10px] text-gray-500 mb-1">إشراف فسحة (25د)</label>
-                                        <input type="number" id="task-break" value="0" min="0" class="p-2 rounded-lg border text-center font-bold outline-none">
+                                    <div class="space-y-1">
+                                        <label id="task-break-lbl" class="text-[10px] font-bold text-slate-400 px-1">إشراف فسحة</label>
+                                        <input type="number" id="task-break" value="0" class="w-full p-4 rounded-2xl border dark:border-slate-700 dark:bg-slate-900 text-center font-black">
                                     </div>
-                                    <div class="flex flex-col">
-                                        <label class="text-[10px] text-gray-500 mb-1">إشراف خروج (25د)</label>
-                                        <input type="number" id="task-exit" value="0" min="0" class="p-2 rounded-lg border text-center font-bold outline-none">
+                                    <div class="space-y-1">
+                                        <label id="task-exit-lbl" class="text-[10px] font-bold text-slate-400 px-1">إشراف خروج</label>
+                                        <input type="number" id="task-exit" value="0" class="w-full p-4 rounded-2xl border dark:border-slate-700 dark:bg-slate-900 text-center font-black">
                                     </div>
-                                    <div class="flex flex-col">
-                                        <label class="text-[10px] text-gray-500 mb-1">المناداة (20د)</label>
-                                        <input type="number" id="task-call" value="0" min="0" class="p-2 rounded-lg border text-center font-bold outline-none">
+                                    <div class="space-y-1">
+                                        <label id="task-call-lbl" class="text-[10px] font-bold text-slate-400 px-1">المناداة</label>
+                                        <input type="number" id="task-call" value="0" class="w-full p-4 rounded-2xl border dark:border-slate-700 dark:bg-slate-900 text-center font-black">
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-dashed border-gray-300">
-                                <input type="checkbox" id="is-head" class="w-5 h-5 accent-blue-900 cursor-pointer">
-                                <label for="is-head" class="text-sm font-bold cursor-pointer text-gray-700">رئيس قسم</label>
+                            <div class="flex items-center gap-4 p-5 bg-blue-50/50 dark:bg-blue-900/10 rounded-[1.5rem] border-2 border-dashed border-blue-200 dark:border-blue-900">
+                                <input type="checkbox" id="is-head" class="w-7 h-7 rounded-xl accent-blue-800 cursor-pointer">
+                                <label id="head-lbl" for="is-head" class="text-sm font-black cursor-pointer text-blue-900 dark:text-blue-300">رئيس قسم؟</label>
                             </div>
 
-                            <div class="space-y-3">
-                                <p class="text-sm font-bold text-gray-700 flex justify-between">
-                                    <span>توزيع الحصص:</span>
-                                    <span class="text-blue-600 text-xs" id="selected-count">0 حصص مختارة</span>
-                                </p>
-                                <div class="max-h-60 overflow-y-auto custom-scrollbar pr-2 space-y-4" id="days-container"></div>
+                            <div class="space-y-4">
+                                <div class="flex justify-between items-center px-2">
+                                    <span id="period-dist-lbl" class="text-xs font-black text-slate-400">توزيع الحصص</span>
+                                    <span class="bg-blue-600 text-white text-[10px] px-3 py-1 rounded-full font-black" id="selected-count">0</span>
+                                </div>
+                                <div class="max-h-64 overflow-y-auto pr-2 space-y-4" id="days-container"></div>
                             </div>
 
-                            <div class="flex flex-col gap-2 pt-2">
-                                <button id="save-btn" onclick="addTeacher()" class="w-full bg-blue-800 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-blue-900 transition shadow-md">
-                                    <i class="fas fa-save"></i> حفظ البيانات
-                                </button>
-                                <button id="cancel-edit" onclick="resetForm()" class="hidden w-full bg-gray-100 text-gray-600 font-bold py-2 rounded-xl hover:bg-gray-200 transition">إلغاء التعديل</button>
-                            </div>
+                            <button id="save-btn" onclick="addTeacher()" class="w-full bg-blue-800 hover:bg-blue-700 text-white font-black py-5 rounded-3xl flex items-center justify-center gap-2 shadow-xl">
+                                <i class="fas fa-save"></i> <span id="save-text">حفظ وتحليل</span>
+                            </button>
+                            <button id="cancel-edit" onclick="resetForm()" class="hidden w-full bg-slate-200 dark:bg-slate-700 text-slate-600 font-bold py-4 rounded-2xl">إلغاء</button>
                         </div>
                     </section>
                 </div>
 
-                <div class="lg:col-span-8 space-y-6">
-                    <div class="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border">
-                        <h3 class="font-bold text-blue-900">المعلمون <span id="teacher-count" class="bg-blue-100 text-blue-700 px-2 rounded-lg text-sm">0</span></h3>
-                        <button onclick="clearAll()" class="text-red-500 text-sm hover:underline"><i class="fas fa-trash-alt ml-1"></i> مسح الكل</button>
+                <!-- التحليلات والنتائج -->
+                <div class="lg:col-span-8 space-y-10">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div class="stat-card-new bg-blue-800 p-6 rounded-[2rem] text-white shadow-xl">
+                            <i class="fas fa-users stat-icon-bg"></i>
+                            <p id="stat-teachers-lbl" class="text-xs font-bold opacity-70">المعلمين</p>
+                            <p id="teacher-count" class="text-4xl font-black mt-2">0</p>
+                        </div>
+                        <div class="stat-card-new bg-indigo-600 p-6 rounded-[2rem] text-white shadow-xl">
+                            <i class="fas fa-clock stat-icon-bg"></i>
+                            <p id="stat-class-lbl" class="text-xs font-bold opacity-70">وقت الحصص</p>
+                            <p id="total-class-time" class="text-2xl font-black mt-2">0</p>
+                        </div>
+                        <div class="stat-card-new bg-amber-500 p-6 rounded-[2rem] text-white shadow-xl">
+                            <i class="fas fa-tasks stat-icon-bg"></i>
+                            <p id="stat-tasks-lbl" class="text-xs font-bold opacity-70">وقت المهام</p>
+                            <p id="total-tasks-time" class="text-2xl font-black mt-2">0</p>
+                        </div>
+                        <div class="stat-card-new bg-white dark:bg-darkCard p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800">
+                            <p id="stat-fairness-lbl" class="text-xs font-bold text-slate-400">مؤشر العدالة</p>
+                            <p id="fairness-score" class="text-4xl font-black text-blue-600 mt-2">0%</p>
+                            <div class="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full mt-3">
+                                <div id="fairness-bar" class="bg-blue-600 h-full transition-all duration-1000" style="width: 0%"></div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div id="teachers-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                    <!-- الرسوم البيانية -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="bg-white dark:bg-darkCard p-8 rounded-[3rem] shadow-xl border dark:border-slate-800">
+                            <h3 id="chart-class-title" class="font-black text-xl mb-6 dark:text-white">توزيع الكتل التدريسية (%)</h3>
+                            <div class="chart-container"><canvas id="classTimeChart"></canvas></div>
+                        </div>
+                        <div class="bg-white dark:bg-darkCard p-8 rounded-[3rem] shadow-xl border dark:border-slate-800">
+                            <h3 id="chart-load-title" class="font-black text-xl mb-6 dark:text-white">تحليل العبء الأسبوعي</h3>
+                            <div class="chart-container"><canvas id="totalLoadChart"></canvas></div>
+                        </div>
+                    </div>
 
-                    <div class="card rounded-2xl overflow-hidden shadow-sm border-none">
-                        <div class="p-4 bg-white border-b font-bold flex items-center gap-2">
-                            <i class="fas fa-balance-scale text-blue-900"></i> ميزان العدالة الزمنية
+                    <!-- جدول الفرق الزمني -->
+                    <div class="bg-white dark:bg-darkCard rounded-[3rem] overflow-hidden shadow-2xl border dark:border-slate-800">
+                        <div class="p-8 bg-slate-50 dark:bg-slate-800/50 border-b dark:border-slate-700">
+                            <h3 id="table-title" class="font-black text-xl dark:text-white">ميزان المقارنة (المتبقي للوصول للحد الأقصى)</h3>
                         </div>
                         <div class="overflow-x-auto">
-                            <table class="w-full text-right bg-white text-sm">
-                                <thead class="bg-gray-50 text-gray-600">
-                                    <tr>
-                                        <th class="p-4">المعلم</th>
-                                        <th class="p-4 text-center">إجمالي الوقت</th>
-                                        <th class="p-4">نسبة العبء</th>
+                            <table class="w-full text-right text-sm">
+                                <thead>
+                                    <tr class="text-slate-400 font-black bg-slate-100/30 dark:bg-slate-900/20">
+                                        <th id="th-teacher" class="p-6">المعلم</th>
+                                        <th id="th-remaining" class="p-6 text-center">المتبقي للحد الأعلى (دقيقة)</th>
+                                        <th id="th-status" class="p-6">مستوى الاستيعاب</th>
                                     </tr>
                                 </thead>
-                                <tbody id="analysis-table-body" class="divide-y divide-gray-100"></tbody>
+                                <tbody id="analysis-table-body" class="divide-y dark:divide-slate-800"></tbody>
                             </table>
                         </div>
                     </div>
+
+                    <div id="teachers-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
                 </div>
             </div>
         </main>
     </div>
 
     <script>
-        let teachers = [];
-        const DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'];
-        const TIMING = {
-            sunTue: { p1: 40, p2: 40, p3: 40, p4: 35, p5: 35, p6: 35, p7: 35, p8: 40 },
-            wedThu: { p1: 40, p2: 40, p3: 40, p4: 45, p5: 45, p6: 45, p7: 40, p8: 0 }
+        const i18n = {
+            ar: {
+                loginTitle: "بوابة الوصول", loginSub: "نظام أ. سلطان الوليعي", loginBtn: "تسجيل الدخول", userInput: "اسم المستخدم",
+                mainTitle: "نظام إدارة المهام الذكي", mainSub: "أ. سلطان الوليعي - تحليلات التوازن والعدالة",
+                logout: "خروج", formAdd: "إضافة معلم", formEdit: "تعديل المعلم", labelName: "اسم المعلم",
+                taskRep: "تكرار المهام الأسبوعية", prayer: "إشراف صلاة", break: "إشراف فسحة", exit: "إشراف خروج", call: "المناداة",
+                head: "رئيس قسم؟", periods: "توزيع الحصص", save: "حفظ وتحليل",
+                statTeachers: "المعلمين", statClass: "وقت الحصص", statTasks: "وقت المهام", statFair: "مؤشر العدالة",
+                chartClass: "توزيع الكتل التدريسية (%)", chartLoad: "تحليل العبء الأسبوعي",
+                tableTitle: "ميزان المقارنة (المتبقي للوصول للحد الأقصى)", thTeacher: "المعلم", thRem: "المتبقي للحد الأعلى (دقيقة)", thStatus: "مستوى الاستيعاب",
+                busy: "الحد الأقصى", langInd: "E"
+            },
+            en: {
+                loginTitle: "Access Portal", loginSub: "Sultan Al-Walaie System", loginBtn: "Login", userInput: "User Name",
+                mainTitle: "Smart Task System", mainSub: "Sultan Al-Walaie - Balance & Equity",
+                logout: "Logout", formAdd: "Add Teacher", formEdit: "Edit Teacher", labelName: "Name",
+                taskRep: "Weekly Tasks", prayer: "Prayer", break: "Break", exit: "Exit", call: "Call",
+                head: "Head?", periods: "Periods", save: "Save & Analyze",
+                statTeachers: "Teachers", statClass: "Class Time", statTasks: "Task Time", statFair: "Fairness",
+                chartClass: "Class Dist. (%)", chartLoad: "Weekly Load Analysis",
+                tableTitle: "Gap Analysis (Minutes Remaining to Max)", thTeacher: "Teacher", thRem: "Gap to Max (Mins)", thStatus: "Load Status",
+                busy: "At Capacity", langInd: "ع"
+            }
         };
+
+        let currentLang = 'ar';
+        let teachers = [];
+        const DAYS_AR = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'];
+        const DAYS_EN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu'];
+        
+        let classTimeChart = null, totalLoadChart = null;
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'ar' ? 'en' : 'ar';
+            document.documentElement.lang = currentLang;
+            document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+            document.body.className = currentLang + ' bg-slate-50 dark:bg-darkBg text-slate-900 dark:text-slate-200';
+            updateStaticText();
+            renderDaySelectors();
+            updateUI();
+        }
+
+        function updateStaticText() {
+            const t = i18n[currentLang];
+            document.getElementById('lang-indicator').innerText = t.langInd;
+            document.getElementById('login-title').innerText = t.loginTitle;
+            document.getElementById('login-subtitle').innerText = t.loginSub;
+            document.getElementById('login-btn').innerText = t.loginBtn;
+            
+            // تحديث حقل اسم المستخدم بناءً على اللغة
+            document.getElementById('user-input').placeholder = t.userInput;
+
+            document.getElementById('main-title').innerText = t.mainTitle;
+            document.getElementById('main-subtitle').innerText = t.mainSub;
+            document.getElementById('logout-text').innerText = t.logout;
+            document.getElementById('form-title').innerText = t.formAdd;
+            document.getElementById('label-name').innerText = t.labelName;
+            document.getElementById('task-repeat-title').innerText = t.taskRep;
+            document.getElementById('task-prayer-lbl').innerText = t.prayer;
+            document.getElementById('task-break-lbl').innerText = t.break;
+            document.getElementById('task-exit-lbl').innerText = t.exit;
+            document.getElementById('task-call-lbl').innerText = t.call;
+            document.getElementById('head-lbl').innerText = t.head;
+            document.getElementById('period-dist-lbl').innerText = t.periods;
+            document.getElementById('save-text').innerText = t.save;
+            document.getElementById('stat-teachers-lbl').innerText = t.statTeachers;
+            document.getElementById('stat-class-lbl').innerText = t.statClass;
+            document.getElementById('stat-tasks-lbl').innerText = t.statTasks;
+            document.getElementById('stat-fairness-lbl').innerText = t.statFair;
+            document.getElementById('chart-class-title').innerText = t.chartClass;
+            document.getElementById('chart-load-title').innerText = t.chartLoad;
+            document.getElementById('table-title').innerText = t.tableTitle;
+            document.getElementById('th-teacher').innerText = t.thTeacher;
+            document.getElementById('th-remaining').innerText = t.thRem;
+            document.getElementById('th-status').innerText = t.thStatus;
+        }
+
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon-global');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                icon.className = 'fas fa-moon text-blue-900';
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.classList.add('dark');
+                icon.className = 'fas fa-sun text-yellow-400';
+                localStorage.setItem('theme', 'dark');
+            }
+            if (teachers.length > 0) updateCharts();
+        }
+
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+            document.getElementById('theme-icon-global').className = 'fas fa-sun text-yellow-400';
+        }
 
         function checkLogin() {
             const u = document.getElementById('user-input').value;
@@ -151,6 +321,7 @@
                 document.getElementById('login-overlay').style.display = 'none';
                 document.getElementById('app-content').style.display = 'block';
                 sessionStorage.setItem('isLogged', 'true');
+                updateUI();
             } else { document.getElementById('error-msg').classList.remove('hidden'); }
         }
 
@@ -161,19 +332,21 @@
                 document.getElementById('login-overlay').style.display = 'none';
                 document.getElementById('app-content').style.display = 'block';
             }
+            updateStaticText();
             renderDaySelectors();
             loadData();
         });
 
         function renderDaySelectors() {
             const container = document.getElementById('days-container');
-            container.innerHTML = DAYS.map((day, idx) => `
-                <div class="bg-white border rounded-xl p-3">
-                    <p class="text-xs font-black text-gray-500 mb-2">${day}</p>
+            const days = currentLang === 'ar' ? DAYS_AR : DAYS_EN;
+            container.innerHTML = days.map((day, idx) => `
+                <div class="bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-2xl p-4">
+                    <p class="text-[10px] font-black text-slate-400 mb-3">${day}</p>
                     <div class="grid grid-cols-4 gap-2">
                         ${[1,2,3,4,5,6,7,8].map(p => {
                             if ((idx >= 3) && p === 8) return ''; 
-                            return `<div onclick="toggleBox(this)" class="period-box p-2 text-center rounded-lg text-xs font-bold" data-day="${day}" data-period="${p}">${p}</div>`;
+                            return `<div onclick="toggleBox(this)" class="period-box p-2 text-center rounded-xl text-xs font-black dark:text-slate-300" data-day="${DAYS_AR[idx]}" data-period="${p}">${p}</div>`;
                         }).join('')}
                     </div>
                 </div>
@@ -181,30 +354,26 @@
         }
 
         function toggleBox(el) { el.classList.toggle('selected'); updateSelectionCount(); }
-
         function updateSelectionCount() {
             const count = document.querySelectorAll('.period-box.selected').length;
-            document.getElementById('selected-count').innerText = `${count} حصص مختارة`;
+            document.getElementById('selected-count').innerText = count;
         }
 
-        function formatTime(minutes) {
-            const h = Math.floor(minutes / 60);
-            const m = Math.round(minutes % 60);
-            return h > 0 ? `${h} س و ${m} د` : `${m} د`;
-        }
+        const TIMING = {
+            sunTue: { p1: 40, p2: 40, p3: 40, p4: 35, p5: 35, p6: 35, p7: 35, p8: 40 },
+            wedThu: { p1: 40, p2: 40, p3: 40, p4: 45, p5: 45, p6: 45, p7: 40, p8: 0 }
+        };
 
         function addTeacher() {
             const name = document.getElementById('teacher-name').value.trim();
             const isHead = document.getElementById('is-head').checked;
             const editId = document.getElementById('edit-teacher-id').value;
-            
-            // سحب قيم المهام الحالية من المربعات
             const prayer = parseInt(document.getElementById('task-prayer').value) || 0;
             const breakTime = parseInt(document.getElementById('task-break').value) || 0;
             const exit = parseInt(document.getElementById('task-exit').value) || 0;
             const call = parseInt(document.getElementById('task-call').value) || 0;
             
-            if (!name) return alert("يرجى إدخال اسم المعلم");
+            if (!name) return;
 
             const selectedPeriods = [];
             document.querySelectorAll('.period-box.selected').forEach(box => {
@@ -219,10 +388,8 @@
 
             const teacherData = {
                 id: editId ? parseInt(editId) : Date.now(),
-                name,
-                isHead,
-                selectedPeriods,
-                tasksConfig: { prayer, breakTime, exit, call }, // حفظ المهام لكل معلم
+                name, isHead, selectedPeriods,
+                tasksConfig: { prayer, breakTime, exit, call },
                 classMinutes: classMins,
                 tasksMinutes: tasksMins,
                 totalMinutes: classMins + tasksMins
@@ -231,37 +398,10 @@
             if (editId) {
                 const index = teachers.findIndex(t => t.id == editId);
                 teachers[index] = teacherData;
-            } else {
-                teachers.push(teacherData);
-            }
+            } else { teachers.push(teacherData); }
 
             resetForm();
             updateUI();
-        }
-
-        function editTeacher(id) {
-            const t = teachers.find(teacher => teacher.id == id);
-            if (!t) return;
-            document.getElementById('edit-teacher-id').value = t.id;
-            document.getElementById('teacher-name').value = t.name;
-            document.getElementById('is-head').checked = t.isHead;
-            
-            // استعادة مهام المعلم المحددة له سابقاً
-            document.getElementById('task-prayer').value = t.tasksConfig?.prayer || 0;
-            document.getElementById('task-break').value = t.tasksConfig?.breakTime || 0;
-            document.getElementById('task-exit').value = t.tasksConfig?.exit || 0;
-            document.getElementById('task-call').value = t.tasksConfig?.call || 0;
-
-            document.getElementById('form-title').innerHTML = '<i class="fas fa-edit"></i> تعديل بيانات المعلم';
-            document.getElementById('save-btn').innerText = 'تحديث البيانات';
-            document.getElementById('cancel-edit').classList.remove('hidden');
-
-            document.querySelectorAll('.period-box').forEach(box => {
-                box.classList.remove('selected');
-                if (t.selectedPeriods.find(p => p.day === box.dataset.day && p.p == box.dataset.period)) box.classList.add('selected');
-            });
-            updateSelectionCount();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function resetForm() {
@@ -272,60 +412,115 @@
             document.getElementById('task-break').value = 0;
             document.getElementById('task-exit').value = 0;
             document.getElementById('task-call').value = 0;
-            document.getElementById('form-title').innerHTML = '<i class="fas fa-user-plus"></i> إضافة معلم جديد';
-            document.getElementById('save-btn').innerText = 'حفظ البيانات';
-            document.getElementById('cancel-edit').classList.add('hidden');
             document.querySelectorAll('.period-box').forEach(b => b.classList.remove('selected'));
             updateSelectionCount();
-        }
-
-        function removeTeacher(id) {
-            if(confirm('حذف هذا المعلم؟')) { teachers = teachers.filter(t => t.id !== id); updateUI(); }
-        }
-
-        function clearAll() {
-            if(confirm('حذف الكل؟')) { teachers = []; updateUI(); }
+            document.getElementById('form-title').innerText = i18n[currentLang].formAdd;
+            document.getElementById('cancel-edit').classList.add('hidden');
         }
 
         function updateUI() {
             localStorage.setItem('teacher_data_sultan', JSON.stringify(teachers));
             document.getElementById('teacher-count').innerText = teachers.length;
-            const grid = document.getElementById('teachers-grid');
-            grid.innerHTML = teachers.map(t => `
-                <div class="card p-5 rounded-2xl relative shadow-sm border-r-4 ${t.isHead ? 'border-amber-400' : 'border-blue-600'}">
-                    <div class="flex justify-between items-start mb-4">
-                        <div><h3 class="font-bold text-lg">${t.name}</h3>${t.isHead ? '<span class="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold">رئيس قسم</span>' : ''}</div>
-                        <div class="flex gap-2">
-                            <button onclick="editTeacher(${t.id})" class="text-blue-500 hover:bg-blue-50 p-2 rounded-lg transition"><i class="fas fa-edit"></i></button>
-                            <button onclick="removeTeacher(${t.id})" class="text-red-400 hover:bg-red-50 p-2 rounded-lg transition"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4 text-sm">
-                        <div class="bg-gray-50 p-2 rounded-lg border border-gray-100">
-                            <span class="block text-gray-400 text-[10px] mb-1">وقت التدريس (${t.selectedPeriods.length} ح)</span>
-                            <span class="font-bold text-gray-700">${formatTime(t.classMinutes)}</span>
-                        </div>
-                        <div class="bg-blue-50 p-2 rounded-lg border border-blue-100">
-                            <span class="block text-blue-400 text-[10px] mb-1">وقت المهام</span>
-                            <span class="font-bold text-blue-700">${formatTime(t.tasksMinutes)}</span>
-                        </div>
-                    </div>
-                    <div class="mt-3 pt-3 border-t border-dashed flex justify-between items-center font-black text-blue-900">
-                        <span class="text-xs text-gray-400">الإجمالي الأسبوعي:</span>
-                        <span>${formatTime(t.totalMinutes)}</span>
-                    </div>
-                </div>
-            `).join('');
+            const totalClassTime = teachers.reduce((sum, t) => sum + t.classMinutes, 0);
+            const totalTasksTime = teachers.reduce((sum, t) => sum + t.tasksMinutes, 0);
+            
+            const maxVal = teachers.length > 0 ? Math.max(...teachers.map(t => t.totalMinutes)) : 0;
 
             const tbody = document.getElementById('analysis-table-body');
-            const maxTime = Math.max(...teachers.map(t => t.totalMinutes), 1);
-            tbody.innerHTML = teachers.sort((a,b) => b.totalMinutes - a.totalMinutes).map(t => `
-                <tr class="hover:bg-blue-50/30 transition">
-                    <td class="p-4"><div class="font-bold text-gray-700">${t.name}</div></td>
-                    <td class="p-4 text-center font-black text-blue-800">${formatTime(t.totalMinutes)}</td>
-                    <td class="p-4"><div class="w-full bg-gray-100 h-1.5 rounded-full"><div class="bg-blue-600 h-full rounded-full" style="width: ${(t.totalMinutes/maxTime*100)}%"></div></div></td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = teachers.sort((a,b) => b.totalMinutes - a.totalMinutes).map(t => {
+                const remaining = maxVal - t.totalMinutes;
+                const percent = maxVal > 0 ? Math.round((t.totalMinutes / maxVal) * 100) : 100;
+                return `
+                <tr class="hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-colors">
+                    <td class="p-6 font-black dark:text-white">${t.name}</td>
+                    <td class="p-6 text-center font-black ${remaining > 0 ? 'text-emerald-500' : 'text-slate-400'}">
+                        ${remaining > 0 ? `+${remaining}` : i18n[currentLang].busy}
+                    </td>
+                    <td class="p-6">
+                        <div class="flex items-center gap-3">
+                            <div class="flex-1 bg-slate-100 dark:bg-slate-800 h-3 rounded-full overflow-hidden">
+                                <div class="bg-gradient-to-r from-blue-400 to-blue-700 h-full" style="width: ${percent}%"></div>
+                            </div>
+                            <span class="text-xs font-black text-slate-500">${percent}%</span>
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
+
+            updateCharts();
+        }
+
+        function updateCharts() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#94a3b8' : '#64748b';
+            const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+
+            const ctx1 = document.getElementById('classTimeChart').getContext('2d');
+            const ctx2 = document.getElementById('totalLoadChart').getContext('2d');
+            
+            if (classTimeChart) classTimeChart.destroy();
+            if (totalLoadChart) totalLoadChart.destroy();
+            if (teachers.length === 0) return;
+            
+            const totalClassAll = teachers.reduce((sum, t) => sum + t.classMinutes, 0);
+
+            classTimeChart = new Chart(ctx1, {
+                type: 'doughnut',
+                data: {
+                    labels: teachers.map(t => t.name),
+                    datasets: [{ 
+                        data: teachers.map(t => t.classMinutes), 
+                        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'],
+                        borderWidth: 5, borderColor: isDark ? '#1e293b' : '#fff'
+                    }]
+                },
+                options: { 
+                    responsive: true, maintainAspectRatio: false, cutout: '65%',
+                    plugins: { 
+                        legend: { position: 'bottom', labels: { color: textColor, font: { family: 'Tajawal', weight: 'bold' } } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const val = context.raw;
+                                    const perc = ((val/totalClassAll)*100).toFixed(1);
+                                    return `${context.label}: ${perc}%`;
+                                }
+                            }
+                        }
+                    } 
+                }
+            });
+
+            totalLoadChart = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: teachers.map(t => t.name),
+                    datasets: [{ 
+                        data: teachers.map(t => t.totalMinutes), 
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 15
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor } },
+                        x: { grid: { display: false }, ticks: { color: textColor, font: { weight: 'bold' } } }
+                    },
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const maxVal = Math.max(...teachers.map(t => t.totalMinutes));
+                                    const perc = Math.round((context.raw/maxVal)*100);
+                                    return `${context.raw} mins (${perc}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
         }
 
         function loadData() {
@@ -335,3 +530,4 @@
     </script>
 </body>
 </html>
+
